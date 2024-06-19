@@ -1,4 +1,5 @@
 #include "matrix.h"
+#include<vector>
 #define Loop(i,a,b) for (int i = a ; i < b ; i++)
 #define MAX_THREADS 8
 using namespace std;
@@ -45,6 +46,19 @@ int** Matrix::T(){
     return MT;
 }
 
+/* Aim: Obtain the (i,j) element of the output matrix by using multithreading
+ * Arguments: (row of matrix A, column of matrix B, size of vectors, variable to store sum)
+ * Each thread will evaluate one entry of the matrix C
+  */
+
+void multiply_array(vector<int> Row, vector<int> Column, int size, int &element){
+	Loop(i,0,size){
+		element+=Row[i]*Column[i];
+	}		
+	return;
+
+}
+
 Matrix* Matrix::multiplyMatrix(Matrix* N) {
     if (this->m != N->n) {
         return NULL;
@@ -64,8 +78,35 @@ Matrix* Matrix::multiplyMatrix(Matrix* N) {
     C[i][j] = sum over k = 0 to n2-1 {A[i][k]*B[k][j]}
 
     */
+
+    thread **T = new thread*[this->n];
+	Loop(i,0,this->n){
+	    Loop(j,0,N->m){
+		    int size = this->m;
+		    // Row of first matrix
+		    vector<int> row(size);
+		    //int row[size];
+		    //int column[size];
+		    Loop(k,0,size) row[k]=this->M[i][k];
+		    //Column of matrix B
+		    vector<int> column(size);
+		    Loop(l,0,size) column[l]=N->M[l][j];
+		    //Variable to store sum
+		    int sum=0;
+
+		    T[i][j] = thread(multiply_array,row,column,size,sum);
+		    c->M[i][j]=sum;
+	    }
+    }
+    Loop(i,0,this->n){
+	    Loop(j,0,N->m){
+		    T[i][j].join();
+	    }
+    }
+
+
     cout<<"STUDENT CODE NOT IMPLEMENTED!\n";
-    exit(1);
+    //exit(1);
     return c;
 }
 

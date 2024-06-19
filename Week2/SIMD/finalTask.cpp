@@ -22,10 +22,10 @@ int main () {
     float vec1[n];
     float vec2[n];
     for (int i=0; i<n; i++) {
-        cin>>vec1[i];
+        vec1[i]=i;
     }
     for (int i=0; i<n; i++) {
-        cin>>vec2[i];
+        vec2[i]=i;
     }
     float naiveTimeTaken = 0;
     float SIMDTimeTaken = 0;
@@ -49,8 +49,26 @@ int main () {
         dotProduct = 0;
         auto start2 = chrono::high_resolution_clock::now();
         //STUDENT CODE BEGINS HERE
-        cout<<"STUDENT CODE NOT IMPLEMENTED!\n";
-        exit(-1);
+        __m256 a,b,c;
+        float half[4];
+        for(int i=0;i<n-(n%8);i+=8){
+            a= _mm256_loadu_ps(vec1+i);
+            b= _mm256_loadu_ps(vec2+i);
+            c= _mm256_mul_ps(a,b);
+            __m128 d= _mm256_extractf128_ps(c,0);
+            __m128 e= _mm256_extractf128_ps(c,1);
+            __m128 f= _mm_hadd_ps(d,e);
+            __m128 g= _mm_hadd_ps(f,f);
+            _mm_storeu_ps(half,g);
+            dotProduct+=(half[0]+half[1]);
+            
+        }
+        for(int i=n-(n%8);i<n;i++){
+            dotProduct+=(vec1[i])*(vec2[i]);
+        }
+
+        //cout<<"STUDENT CODE IMPLEMENTED!\n";
+        //exit(-1);
         //END OF STUDENT CODE
         auto end2 = chrono::high_resolution_clock::now();
         auto elapsed2 = chrono::duration_cast<chrono::duration<double>>(end2 - start2);

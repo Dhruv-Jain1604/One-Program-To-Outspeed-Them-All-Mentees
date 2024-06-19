@@ -166,14 +166,20 @@ int32_t z[2];
 z[0] = x[0] + y[0];
 z[1] = x[1] + y[1];
 cout<<z[0]<<" "<<z[1]<<endl;
-/*
 
+/*
 TASK:
 MAKE A VECTORIZED IMPLEMENTATION OF ABOVE CODE
-
 */
 
 //student code begin
-cout<<"Task not completed!\n";
+int32_t p= 0x00CB007F;
+int32_t q= 0x00C9009B;
+int32_t r = p+q;
+int16_t r_second = r>>16;
+int16_t r_first = r^(0xFFFF0000);
+
+cout<<r_first<<" "<<r_second<<endl;
+cout<<"Task completed!\n";
 //student code end
 }

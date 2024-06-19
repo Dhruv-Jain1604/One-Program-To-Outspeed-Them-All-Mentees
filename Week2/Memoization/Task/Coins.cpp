@@ -62,8 +62,25 @@ ll solution_M(ll* coins, int n, ll sum){
     Count_M++; // Do not remove this line
     ll N = 0;
     // STUDENT CODE BEGINS HERE
-    cout<<"STUDENT CODE NOT IMPLEMENTED\n";
-    exit(1);
+    //cout<<sum<<endl;
+    
+    if(dp[sum]!=-1) return dp[sum];
+    if(sum==0){
+        dp[0]=1;
+        return 1;
+    }
+    dp[sum]=0;
+    //if(dp[sum]!=0) return dp[n];
+    for(ll j=0;j<n;j++){
+        if(sum-coins[j]>=0){
+            dp[sum]=(dp[sum]+solution_M(coins,n,sum-coins[j]))%MOD;
+        }
+        else break;
+    }
+    
+    return dp[sum];
+    //cout<<"STUDENT CODE NOT IMPLEMENTED\n";
+    //exit(1);
     return N;
 }
 int main(int argc, char* argv[]){
@@ -85,6 +102,9 @@ int main(int argc, char* argv[]){
     }
     else if (choice == 2){
         dp = new ll[x + 1];
+        for(ll i=0;i<=x;i++){
+            dp[i]=-1;
+        }
         auto start_M = high_resolution_clock::now();
         ll N_M = solution_M(coins,n,x);
         auto end_M = high_resolution_clock::now();
@@ -96,6 +116,9 @@ int main(int argc, char* argv[]){
     }
     else if (choice == 3){
         dp = new ll[x + 1];
+        for(ll i=0;i<=x;i++){
+            dp[i]=-1;
+        }
         auto start_R = high_resolution_clock::now();
         ll N_R = solution_R(coins,n,x);
         auto end_R = high_resolution_clock::now();
