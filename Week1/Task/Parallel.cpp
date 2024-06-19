@@ -1,5 +1,5 @@
 #include "matrix.h"
-#include<vector>
+#include<bits/stdc++.h>
 #define Loop(i,a,b) for (int i = a ; i < b ; i++)
 #define MAX_THREADS 8
 using namespace std;
@@ -46,16 +46,17 @@ int** Matrix::T(){
     return MT;
 }
 
-/* Aim: Obtain the (i,j) element of the output matrix by using multithreading
- * Arguments: (row of matrix A, column of matrix B, size of vectors, variable to store sum)
- * Each thread will evaluate one entry of the matrix C
-  */
 
-void multiply_array(vector<int> Row, vector<int> Column, int size, int &element){
-	Loop(i,0,size){
-		element+=Row[i]*Column[i];
-	}		
-	return;
+void multiply_array(int thread_no, int start_element, int end_element, Matrix* P,int dim1_P,int dim2_P, Matrix* Q,int dim2_Q, Matrix* R){
+    for(int k=start_element;k<=end_element;k++){
+        int coord_x= k/dim2_Q;
+        int coord_y=k%dim2_Q;
+        int temp_sum=0;
+        for(int l=0;l<dim2_P;l++){
+            temp_sum+=(P->M[coord_x][l])*(Q->M[l][coord_y]);
+        }
+        R->set(coord_x,coord_y,temp_sum);
+    }
 
 }
 
@@ -79,33 +80,27 @@ Matrix* Matrix::multiplyMatrix(Matrix* N) {
 
     */
 
-    thread **T = new thread*[this->n];
-	Loop(i,0,this->n){
-	    Loop(j,0,N->m){
-		    int size = this->m;
-		    // Row of first matrix
-		    vector<int> row(size);
-		    //int row[size];
-		    //int column[size];
-		    Loop(k,0,size) row[k]=this->M[i][k];
-		    //Column of matrix B
-		    vector<int> column(size);
-		    Loop(l,0,size) column[l]=N->M[l][j];
-		    //Variable to store sum
-		    int sum=0;
-
-		    T[i][j] = thread(multiply_array,row,column,size,sum);
-		    c->M[i][j]=sum;
-	    }
+    thread *T = new thread[MAX_THREADS];
+    int *element_limit = new int[MAX_THREADS];
+    for(int i=0;i<MAX_THREADS-1;i++){
+        element_limit[i]=(this->n)*(N->m)/MAX_THREADS;
     }
-    Loop(i,0,this->n){
-	    Loop(j,0,N->m){
-		    T[i][j].join();
-	    }
+    element_limit[MAX_THREADS-1]=(this->n)*(N->m);
+
+    for(int i=0;i<MAX_THREADS;i++){
+        if(i==0){
+            T[i]=thread(multiply_array,0,0,element_limit[i]-1,this,this->n,this->m,N,N->m,c);
+        }
+        else {
+            T[i]=thread(multiply_array,i,element_limit[i-1],element_limit[i]-1,this,this->n,this->m,N,N->m,c);
+        }
     }
 
+    for(int i=0;i<MAX_THREADS;i++){
+        T[i].join();
+    }
 
-    cout<<"STUDENT CODE NOT IMPLEMENTED!\n";
+    //cout<<"STUDENT CODE NOT IMPLEMENTED!\n";
     //exit(1);
     return c;
 }
