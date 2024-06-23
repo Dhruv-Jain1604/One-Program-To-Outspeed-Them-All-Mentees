@@ -1,4 +1,5 @@
 #include <iostream>
+#include<bits/stdc++.h>
 using namespace std;
 
 /*
@@ -15,9 +16,34 @@ EXPECTED TIME COMPLEXITY : O(n*log(q)) where q = max(arr)
 
 */
 
+void countsort(int *arr, int size, int exponent){
+    int temp[size];
+    int i=0;
+    int count_digit[2]={0,0};
+    for(i=0;i<size;i++){
+        count_digit[(arr[i]/exponent)%2]++;
+    }
+    count_digit[1]+=count_digit[0];
+    for(i=size-1;i>=0;i--){
+        temp[count_digit[(arr[i]/exponent)%2]-1]=arr[i];
+        count_digit[(arr[i]/exponent)%2]--;
+    }
+    for(i=0;i<size;i++){
+        arr[i]=temp[i];
+    }
+
+    return;
+
+}
 void radixSort (int *arr, int size) {
-    cout<<"STUDENT CODE NOT IMPLEMENTED!\n";
-    exit(1);
+
+    int* max_pointer= max_element(arr, arr+size);
+    int max = *(max_pointer);
+    for(int exponent=1; max/exponent>0;exponent*=2){
+        countsort(arr,size,exponent);
+    }
+    //cout<<"STUDENT CODE NOT IMPLEMENTED!\n";
+    //exit(1);
 }
 
 int main () {

@@ -17,6 +17,28 @@ ll naive (ll n) {
     return dp[n];
 }
 
+void mat_mul(ll** A, ll** B, ll** Result){
+    ll D[2][2];
+    for(int p=0;p<2;p++){
+        for(int q=0;q<2;q++){
+            D[p][q]=0;
+        }
+    }
+    //Matrix multiplication
+    for(int i=0;i<2;i++){
+        for(int j=0;j<2;j++){
+            for(int k=0;k<2;k++){
+                D[i][k]+=(A[i][j])*(B[j][k]);
+            }
+        }
+    }
+    for(int i=0;i<2;i++){
+        for(int j=0;j<2;j++){
+            Result[i][j]=D[i][j];
+        }
+    }
+}
+
 ll optim(ll n){
 /*
 
@@ -31,8 +53,40 @@ We expect your code to be faster (and completely inaccurate, as even naive metho
 
 */
 
-cout<<"Student code not implemented\n";
-exit(1);
+if(n==0) return 0;
+if(n==1 || n==2) return 1;
+
+ll** C = new ll*[2];
+C[0]= new ll[2];
+C[1] = new ll[2];
+C[0][0]=1;
+C[0][1]=1;
+C[1][0]=1;
+C[1][1]=0;
+
+ll** id = new ll*[2];
+id[0]= new ll[2];
+id[1] = new ll[2];
+id[0][0]=1;
+id[0][1]=0;
+id[1][0]=0;
+id[1][1]=1;
+//Aim: To use fast exponentiation to obtain C^(n-1) to get f(n)
+
+ll** Ans = id;
+ll** Pow_2=C;
+ll i=1;
+
+while(n-1>=i){
+    if(n&i) mat_mul(Ans,Pow_2,Ans);
+    mat_mul(Pow_2,Pow_2,Pow_2);
+    i=i<<1;
+}
+
+return Ans[0][1];
+
+//cout<<"Student code not implemented\n";
+//exit(1);
 
 }
 
