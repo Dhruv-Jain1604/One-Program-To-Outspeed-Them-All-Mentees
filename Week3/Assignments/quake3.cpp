@@ -3,6 +3,7 @@
 #include <immintrin.h>
 #include <chrono>
 #include <bits/stdc++.h>
+#define MAX_THREADS 8
 using namespace std;
 
 #define MAX 10000000
@@ -64,6 +65,23 @@ Then it computes softmax in O(n)
 
 }
 
+void exp_soft(float* &B, int start, int end, float &sum){
+    if (start==end) return;
+    for(int p=start;p<end;p++){
+        B[p]=exp(-B[p]);
+        sum+=B[p];
+    }
+    return;
+}
+
+void div_soft(float* &B, int start, int end, float sum){
+    if(start==end) return;
+    for(int q=start;q<end;q++){
+        B[q]/=sum;
+    }
+    return;
+}
+
 void optimal (float *A, float *B, int n) {
 
 /*
@@ -73,10 +91,47 @@ YOU MAY EDIT THIS FILE HOWEVER YOU WANT
 HINT : USE SIMD INSTRUCTIONS, YOU MAY FIND SOMETHING BEAUTIFUL ONLINE. THEN USE MULTITHREADING FOR SOFTMAX
 (Note we do not expect to see a speedup for low values of n, but for n > 100000)
 
-*/
-
-    cout<<"Student code not implemented\n";
-    exit(1);
+*/  
+    __m128 half, three_half;
+    half= _mm_set1_ps(0.5F);
+    three_half= _mm_set1_ps(1.5F);
+     __m128i magic_number = _mm_set1_epi32(0x5f3759df);
+    for(int i=0;i<n-(n%4);i+=4){
+        __m128 number_float,x2;
+        number_float= _mm_loadu_ps(A+i);
+        x2 = _mm_mul_ps(number_float,half);
+        number_float=_mm_castsi128_ps(_mm_sub_epi32(magic_number, _mm_srli_epi32(_mm_castps_si128(number_float), 1)));
+        number_float = _mm_mul_ps(number_float,_mm_mul_ps(number_float,_mm_sub_ps(three_half,_mm_mul_ps(x2,_mm_mul_ps(number_float,number_float)))));
+        _mm_storeu_ps(B+i,number_float);
+    }
+    for(int i=n-(n%4);i<n;i++){
+        B[i]=quake3Algo(A[i]);
+    }
+    float sum=0;
+    thread* T = new thread[MAX_THREADS];
+    for(int j=0; j<MAX_THREADS-1;j++){
+        unsigned long start=j*(n/MAX_THREADS);
+        unsigned long end=(j+1)*(n/MAX_THREADS);
+        T[j]=thread(exp_soft,ref(B),start,end,ref(sum));
+    }
+    T[MAX_THREADS-1] = thread(exp_soft,ref(B),(MAX_THREADS-1)*(n/MAX_THREADS),n,ref(sum));
+    for(int k=0;k<MAX_THREADS;k++){
+        T[k].join();
+    }
+    delete[] T;
+    thread* R = new thread[MAX_THREADS];
+    for(int j=0; j<MAX_THREADS-1;j++){
+        unsigned long start=j*(n/MAX_THREADS);
+        unsigned long end=(j+1)*(n/MAX_THREADS);
+        R[j]=thread(div_soft,ref(B),start,end,sum);
+    }
+    R[MAX_THREADS-1] = thread(div_soft,ref(B),(MAX_THREADS-1)*(n/MAX_THREADS),n,sum);
+    for(int k=0;k<MAX_THREADS;k++){
+        R[k].join();
+    }
+    delete[] R;
+    //cout<<"Student code not implemented\n";
+    //exit(1);
 
 }
 
