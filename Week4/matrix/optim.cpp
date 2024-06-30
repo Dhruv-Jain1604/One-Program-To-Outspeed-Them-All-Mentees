@@ -825,6 +825,38 @@ matrix operator/(const matrix& first, const double t) {
     return quotient;
 }
 
+void mlt_simd_matmul(matrix &m1, matrix &m2, unsigned long start, unsigned long end, matrix &result){
+    if(start==end) return;
+    unsigned long x_coord = result.rows;
+    unsigned long y_coord = result.cols;
+    unsigned long max_counter = m1.cols;
+    for(unsigned long element=start;element<end;element++){
+        unsigned long cx= element/x_coord;
+        unsigned long cy = element/y_coord;
+        double sum=0;
+        __m256d r1_m1, r2_m2, mul_r1r2;
+        double temp[4], summation[4];
+        for(unsigned long counter=0; counter<max_counter-(max_counter%4);counter+=4){
+            r1_m1 = _mm256_loadu_pd(&m1(cx,counter));
+            for(int i=0;i<4;i++){
+                temp[i] = m2(counter+i,cy);
+            }
+            r2_m2 = _mm256_loadu_pd(temp);
+            mul_r1r2 = _mm256_mul_pd(r1_m1,r2_m2);
+            mul_r1r2 = _mm256_hadd_pd(mul_r1r2, mul_r1r2);
+            _mm256_storeu_pd(summation,mul_r1r2);
+            sum+=(summation[0]+summation[2]);
+        }
+        for(unsigned long count=max_counter-(max_counter%4);count<max_counter;count++){
+            sum+=m1(cx,count)*m2(count,cy);
+        }
+        result(cx,cy) = sum;
+        
+    }
+    return;
+
+}
+
 matrix matmul(const matrix& first, const matrix& second){
     pair<unsigned long, unsigned long> dim1 = first.shape();
     pair<unsigned long, unsigned long> dim2 = second.shape();
@@ -833,14 +865,16 @@ matrix matmul(const matrix& first, const matrix& second){
     }
     else{
         matrix net(dim1.first,dim2.second);
-        for( unsigned long i=0;i< dim1.first;i++){
-            for(unsigned long j=0;j< dim2.second;j++){
-                double sum=0;
-                for(unsigned long k=0;k< dim1.second;k++){
-                    sum+=first(i,k)*second(k,j);
-                }
-                net(i,j)=sum;
-            }
+        unsigned long no_elements = net.rows*net.cols;
+        thread* T = new thread[MAX_THREADS];
+         for(int j=0;j<MAX_THREADS-1;j++){
+            unsigned long start=j*(no_elements/MAX_THREADS);
+            unsigned long end=(j+1)*(no_elements/MAX_THREADS);
+            T[j]=thread(mlt_simd_matmul, ref(first),ref(second),start,end,ref(net));
+        }
+         T[MAX_THREADS-1]= thread(mlt_simd_matmul, ref(first),ref(second),(MAX_THREADS-1)*(no_elements/MAX_THREADS) ,no_elements,ref(net));
+        for(int k=0;k<MAX_THREADS;k++){
+            T[k].join();
         }
         return net;
     }
