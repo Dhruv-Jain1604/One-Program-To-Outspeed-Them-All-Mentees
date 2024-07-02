@@ -1,7 +1,7 @@
 #include "matrix.h"
-#include<thread>
-#include<bits/stdc++.h>
-#include<mutex>
+#include <thread>
+#include <bits/stdc++.h>
+#include <mutex>
 #include <immintrin.h>
 #include <iomanip>
 #define MAX_THREADS 8
@@ -679,20 +679,12 @@ matrix operator/(const matrix& first, const matrix& second){
 matrix operator*(const matrix& first, const double t) {
     matrix product(first.rows, first.cols);
     unsigned long size = (first.rows)*(first.cols);
-    double arr_original[size], array_final[size];
-    for(unsigned long p=0;p<size;p++){
-        arr_original[p]=first.data[p];
-    }
     __m256d constant_operation, element_operation;
     constant_operation= _mm256_set1_pd(t);
-    double temp_arr[4];
     for(unsigned long k=0; k<size-(size%4);k+=4){
-        element_operation=_mm256_loadu_pd(arr_original+k);
+        element_operation=_mm256_loadu_pd(&first.data[k]);
         element_operation = _mm256_mul_pd(element_operation,constant_operation);
-        _mm256_storeu_pd(array_final+k, element_operation);
-    }
-    for(unsigned q=0;q<size-(size%4);q++){
-        product.data[q]=array_final[q];
+        _mm256_storeu_pd(&product.data[k], element_operation);
     }
     for(unsigned long l=size-(size%4);l<size;l++){
         product.data[l]=first.data[l]*t;
@@ -756,20 +748,12 @@ matrix operator+(const matrix& first, const double t) {
 matrix operator+(const matrix& first, const double t) {
     matrix sum(first.rows, first.cols);
     unsigned long size = (first.rows)*(first.cols);
-    double arr_original[size], array_final[size];
-    for(unsigned long p=0;p<size;p++){
-        arr_original[p]=first.data[p];
-    }
     __m256d constant_operation, element_operation;
     constant_operation= _mm256_set1_pd(t);
-    double temp_arr[4];
     for(unsigned long k=0; k<size-(size%4);k+=4){
-        element_operation=_mm256_loadu_pd(arr_original+k);
+        element_operation=_mm256_loadu_pd(&first.data[k]);
         element_operation = _mm256_add_pd(element_operation,constant_operation);
-        _mm256_storeu_pd(array_final+k, element_operation);
-    }
-    for(unsigned q=0;q<size-(size%4);q++){
-        sum.data[q]=array_final[q];
+        _mm256_storeu_pd(&sum.data[k], element_operation);
     }
     for(unsigned long l=size-(size%4);l<size;l++){
         sum.data[l]=first.data[l]+t;
@@ -780,20 +764,12 @@ matrix operator+(const matrix& first, const double t) {
 matrix operator-(const matrix& first, const double t) {
     matrix difference(first.rows, first.cols);
     unsigned long size = (first.rows)*(first.cols);
-    double arr_original[size], array_final[size];
-    for(unsigned long p=0;p<size;p++){
-        arr_original[p]=first.data[p];
-    }
     __m256d constant_operation, element_operation;
     constant_operation= _mm256_set1_pd(t);
-    double temp_arr[4];
     for(unsigned long k=0; k<size-(size%4);k+=4){
-        element_operation=_mm256_loadu_pd(arr_original+k);
+        element_operation=_mm256_loadu_pd(&first.data[k]);
         element_operation = _mm256_sub_pd(element_operation,constant_operation);
-        _mm256_storeu_pd(array_final+k, element_operation);
-    }
-    for(unsigned q=0;q<size-(size%4);q++){
-        difference.data[q]=array_final[q];
+        _mm256_storeu_pd(&difference.data[k], element_operation);
     }
     for(unsigned long l=size-(size%4);l<size;l++){
         difference.data[l]=first.data[l]-t;
@@ -804,20 +780,12 @@ matrix operator-(const matrix& first, const double t) {
 matrix operator/(const matrix& first, const double t) {
     matrix quotient(first.rows, first.cols);
     unsigned long size = (first.rows)*(first.cols);
-    double arr_original[size], array_final[size];
-    for(unsigned long p=0;p<size;p++){
-        arr_original[p]=first.data[p];
-    }
     __m256d constant_operation, element_operation;
     constant_operation= _mm256_set1_pd(t);
-    double temp_arr[4];
     for(unsigned long k=0; k<size-(size%4);k+=4){
-        element_operation=_mm256_loadu_pd(arr_original+k);
+        element_operation=_mm256_loadu_pd(&first.data[k]);
         element_operation = _mm256_div_pd(element_operation,constant_operation);
-        _mm256_storeu_pd(array_final+k, element_operation);
-    }
-    for(unsigned q=0;q<size-(size%4);q++){
-        quotient.data[q]=array_final[q];
+        _mm256_storeu_pd(&quotient.data[k], element_operation);
     }
     for(unsigned long l=size-(size%4);l<size;l++){
         quotient.data[l]=first.data[l]/t;
@@ -825,11 +793,15 @@ matrix operator/(const matrix& first, const double t) {
     return quotient;
 }
 
-void mlt_simd_matmul(matrix &m1, matrix &m2, unsigned long start, unsigned long end, matrix &result){
+const matrix* m1;
+const matrix* m2;
+matrix* result;
+
+void mlt_simd_matmul(unsigned long start, unsigned long end){
     if(start==end) return;
-    unsigned long x_coord = result.rows;
-    unsigned long y_coord = result.cols;
-    unsigned long max_counter = m1.cols;
+    unsigned long x_coord = result->rows;
+    unsigned long y_coord = result->cols;
+    unsigned long max_counter = m1->cols;
     for(unsigned long element=start;element<end;element++){
         unsigned long cx= element/x_coord;
         unsigned long cy = element/y_coord;
@@ -837,9 +809,9 @@ void mlt_simd_matmul(matrix &m1, matrix &m2, unsigned long start, unsigned long 
         __m256d r1_m1, r2_m2, mul_r1r2;
         double temp[4], summation[4];
         for(unsigned long counter=0; counter<max_counter-(max_counter%4);counter+=4){
-            r1_m1 = _mm256_loadu_pd(&m1(cx,counter));
+            r1_m1 = _mm256_loadu_pd(&m1->data[(cx*(m1->cols) + counter)]);
             for(int i=0;i<4;i++){
-                temp[i] = m2(counter+i,cy);
+                temp[i] = m2->data[(counter+i)*(m2->cols) + cy];
             }
             r2_m2 = _mm256_loadu_pd(temp);
             mul_r1r2 = _mm256_mul_pd(r1_m1,r2_m2);
@@ -848,9 +820,9 @@ void mlt_simd_matmul(matrix &m1, matrix &m2, unsigned long start, unsigned long 
             sum+=(summation[0]+summation[2]);
         }
         for(unsigned long count=max_counter-(max_counter%4);count<max_counter;count++){
-            sum+=m1(cx,count)*m2(count,cy);
+            sum+=(m1->data[cx*(m1->cols) + count])*(m2->data[count*(m2->cols) + cy]);
         }
-        result(cx,cy) = sum;
+        result->data[cx*(result->cols) + cy] = sum;
         
     }
     return;
@@ -866,13 +838,16 @@ matrix matmul(const matrix& first, const matrix& second){
     else{
         matrix net(dim1.first,dim2.second);
         unsigned long no_elements = net.rows*net.cols;
+        m1 = &first;
+        m2 = &second;
+        result = &net;
         thread* T = new thread[MAX_THREADS];
          for(int j=0;j<MAX_THREADS-1;j++){
             unsigned long start=j*(no_elements/MAX_THREADS);
             unsigned long end=(j+1)*(no_elements/MAX_THREADS);
-            T[j]=thread(mlt_simd_matmul, ref(first),ref(second),start,end,ref(net));
+            T[j]=thread(mlt_simd_matmul,start,end);
         }
-         T[MAX_THREADS-1]= thread(mlt_simd_matmul, ref(first),ref(second),(MAX_THREADS-1)*(no_elements/MAX_THREADS) ,no_elements,ref(net));
+         T[MAX_THREADS-1]= thread(mlt_simd_matmul,(MAX_THREADS-1)*(no_elements/MAX_THREADS) ,no_elements);
         for(int k=0;k<MAX_THREADS;k++){
             T[k].join();
         }
@@ -1458,7 +1433,7 @@ matrix exp(matrix &a) {
     for(int k=0;k<MAX_THREADS;k++){
         T[k].join();
     }
-    return res;;
+    return res;
 }
 
 matrix tanh(matrix &a) {

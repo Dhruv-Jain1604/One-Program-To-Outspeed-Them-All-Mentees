@@ -67,15 +67,18 @@ int main() {
     // Seed for random number generation
     srand(time(0));
     // Generate sample data
-    //uint64_t n = 1000; // Number of data points
-    //uint64_t d = 10;   // Dimensions of each data point
-    // auto data = generate_linear_data(n, d);
-    // matrix X = data.first;
-    // matrix Y = data.second;
-
+    /*
+    uint64_t n = 1000; // Number of data points
+    uint64_t d = 10;   // Dimensions of each data point
+    auto data = generate_linear_data(n, d);
+    matrix X = data.first;
+    matrix Y = data.second;
+    */
+    
     auto data = parser(std::cin);
     matrix X = data.first;
     matrix Y = data.second;
+    
 
     // Split the data into training and testing sets
     float split_ratio = 0.8;
@@ -89,7 +92,7 @@ int main() {
     
     // Create and train the linear regression model
     LinearRegression lr(X.shape().second);
-    double learning_rate = 0.0001;
+    double learning_rate = 0.001;
     uint64_t limit = 10000;
     lr.train(X_train, Y_train, learning_rate, limit);
     cout<<"===========================================\n";

@@ -11,7 +11,9 @@ LogisticRegression::LogisticRegression(uint64_t D){
 
 matrix LogisticRegression::sigmoid(matrix z){
     matrix g = 1.0*ones(z.rows,1);
-    // Implement sigmoid function here as defined in README.md    
+    // Implement sigmoid function here as defined in README.md  
+    g = g + exp(-z);
+    g = 1/g;  
     return g;
 }
 
@@ -24,6 +26,7 @@ double LogisticRegression::logisticLoss(matrix X, matrix Y){
     }
     double loss = 0;
     // Compute the log loss as defined in README.md
+    
     return loss;
 }
 
@@ -41,7 +44,7 @@ pair<matrix, double> LogisticRegression::lossDerivative(matrix X, matrix Y){
 }
 
 matrix LogisticRegression::predict(matrix X){
-    matrix Y_pred(X.shape().first,0);
+    matrix Y_pred(X.shape().first,1);
     // Using the weights and bias, find the values of y for every x in X
     return Y_pred;
 }  

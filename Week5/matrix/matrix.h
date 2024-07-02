@@ -4,6 +4,11 @@
 #include <vector>
 #include <cmath>
 #include <assert.h>
+#include <immintrin.h>
+#include <bits/stdc++.h>
+#include <thread>
+#include <mutex>
+#include <iomanip>
 #define PB push_back
 using namespace std;
 
@@ -60,7 +65,7 @@ class matrix{
         
         matrix operator[](uint64_t i){ // This returns a row vector of the matrix corresponding to row with index i
             matrix v(1,cols);
-            for (uint64_t j = 0 ; j < rows ; j++){
+            for (uint64_t j = 0 ; j < cols ; j++){
                 v(0,j) = (*this)(i,j);
             }
             return v;
