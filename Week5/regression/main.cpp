@@ -76,8 +76,8 @@ int main() {
     // Generate sample polynomial data
     uint64_t n = 10000;               // Number of data points
     uint64_t polynomial_degree = 10;  // Degree of polynomial (e.g., cubic polynomial)
-    auto data = generate_polynomial_data(n,polynomial_degree);
-    //auto data = parser(std::cin);
+    //auto data = generate_polynomial_data(n,polynomial_degree);
+    auto data = parser(std::cin);
     // cout<<"Reached here\n";
     matrix X = data.first;
     matrix Y = data.second;
@@ -92,7 +92,7 @@ int main() {
 
     // Create and train the linear regression model
     Regression r(polynomial_degree);
-    double learning_rate = 0.01;
+    double learning_rate = 0.001;
     uint64_t limit = 10000;
     r.train(X_train, Y_train, learning_rate, limit);
     cout<<"===========================================\n";

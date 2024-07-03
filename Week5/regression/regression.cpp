@@ -10,19 +10,25 @@ Regression::Regression(uint64_t D){
 }
 
 matrix Regression::transform(matrix X){
+    //cout<<"transform"<<endl;
+    //cout<<X.shape().first<<" "<<X.shape().second<<endl;
     uint64_t n = X.shape().first;
     matrix PHI(n,d);
     // Compute the transform of X as defined in README.md
     matrix temp(n,1);
     temp = X;
+    //X.printMatrix();
     for(uint64_t p=0;p<d;p++){
-        PHI[p] = temp;
+        for(uint64_t q=0;q<n;q++){
+            PHI(q,p)=temp.data[q];
+        }
         temp*=X;
     }
     return PHI;
 }
 
 double Regression::l2loss(matrix X, matrix Y){
+    //cout<<"l2loss"<<endl;
     matrix Y_pred = matmul(X,weights) + bias;
     __size d1 = Y.shape(), d2 = Y_pred.shape();
     if (d1 != d2){
@@ -47,20 +53,21 @@ pair<matrix, double> Regression::l2lossDerivative(matrix X, matrix Y){
         +to_string(d1.second)+" ) and ( "+to_string(d2.first)+" , "+to_string(d2.second)+" ) do not match");
     }
     //Compute gradients as defined in README.md
-   matrix dw(d,1);
-    matrix diff(Y.rows,Y.cols);
-    diff = Y_pred -Y;
-    diff = diff.transpose();
-    uint64_t n= X.rows;
+    matrix dw(d,1);
     double db=0; 
-    matrix temp(1,d);
-    temp = matmul(diff,X);
-    dw = temp.transpose();
+    matrix Z(Y.rows,Y.cols);
+    Z = Y_pred -Y;
+    uint64_t n= X.rows;
+    matrix temp(X.cols,X.rows);
+    temp = X.transpose();
+    dw = matmul(temp,Z);
     dw= dw/n;
+    dw = dw*2;
     for(uint64_t x=0; x<n;x++){
-        db+=diff.data[x];
+        db+=Z.data[x];
     }
     db/=n;
+    db*=2;
     return {dw,db};
 }
 
@@ -82,6 +89,8 @@ void Regression::GD(matrix X, matrix Y,double learning_rate, uint64_t limit){
         pair<matrix,double> temp = l2lossDerivative(X,Y);
         weights = weights - eta*temp.first;
         bias = bias - eta*temp.second;
+        old_loss=loss;
+        loss = l2loss(X,Y);
         if (iteration %100 == 0) train_loss.PB(loss);
         iteration++;
     }
@@ -122,17 +131,19 @@ void Regression::test(matrix X,matrix Y){
 }
 
 double Regression::accuracy(matrix Y_pred, matrix Y){
-    double acc = 0;
+    double acc = 0; 
     // Compute the accuracy of the model
     matrix diff(Y.rows,Y.cols);
     diff = Y_pred -Y;
     diff = fabs(diff);
-    Y = fabs(Y);
-    diff = diff/Y;
+    matrix temp(Y.rows,Y.cols);
+    temp = fabs(Y);
+    diff = diff/temp;
     diff = diff/(Y.rows);
     for(uint64_t z=0; z<Y.rows;z++){
-    acc+=diff.data[z];
+        acc+=diff.data[z];
     }
+    acc = 1-acc;
     return acc;
 }
 

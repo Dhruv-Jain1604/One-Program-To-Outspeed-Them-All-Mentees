@@ -71,7 +71,8 @@ int main() {
     // Generate sample data
     uint64_t n = 1000; // Number of data points
     uint64_t d = 10;   // Dimensions of each data point
-    auto data = parser(std::cin);
+    //auto data = generate_binary_classification_data(n,d);
+   auto data = parser(std::cin);
     matrix X = data.first;
     matrix Y = data.second;
     // Split the data into training and testing sets
@@ -83,7 +84,7 @@ int main() {
     matrix Y_test = split_data.second.second;
     // Create and train the linear regression model
     LogisticRegression lg(d);
-    double learning_rate = 0.01;
+    double learning_rate = 0.001;
     uint64_t limit = 10000;
     lg.train(X_train, Y_train, learning_rate, limit);
     cout<<"===========================================\n";

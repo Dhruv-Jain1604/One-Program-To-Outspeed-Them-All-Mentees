@@ -307,7 +307,7 @@ matrix operator*(const double t, const matrix& first){
 matrix operator/(const double t, const matrix& first){
     matrix quotient(first.rows, first.cols);
     for (uint64_t i=0; i<first.rows*first.cols; i++) {
-        quotient.data[i] = first.data[i]*t/first.data[i];
+        quotient.data[i] = t/first.data[i];
     }
     return quotient;  
 }

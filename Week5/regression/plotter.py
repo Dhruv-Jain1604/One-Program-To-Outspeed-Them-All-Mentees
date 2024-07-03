@@ -30,7 +30,7 @@ def plot_training_loss(training_loss_values):
     plt.xlabel('Iteration')
     plt.ylabel('Training Loss')
     plt.title('Training Loss Over Iterations')
-    plt.show()
+    #plt.show()
     plt.savefig("graph.png")
 
 # Function to save the remaining output to a text file

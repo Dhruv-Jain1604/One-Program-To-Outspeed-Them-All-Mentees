@@ -133,8 +133,12 @@ double LinearRegression::accuracy(matrix Y_pred, matrix Y){
     diff = diff/temp;
     diff = diff/(Y.rows);
     for(uint64_t z=0; z<Y.rows;z++){
+        //cout<<"=========="<<endl;
+        //cout<<Y_pred.data[z]<<" "<<Y.data[z]<<endl;
     acc+=diff.data[z];
+    //cout<<diff.data[z]<<endl;
     }
+    acc = 1-acc;
     return acc;
 }
 
