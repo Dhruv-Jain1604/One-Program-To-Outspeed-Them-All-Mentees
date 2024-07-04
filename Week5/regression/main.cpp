@@ -1,6 +1,7 @@
 #include "regression.h"
 #include <fstream>
 #include <sstream>
+#include <chrono>
 using namespace std;
 
 std::vector<double> split(const std::string &s, char delimiter) {
@@ -76,13 +77,14 @@ int main() {
     // Generate sample polynomial data
     uint64_t n = 10000;               // Number of data points
     uint64_t polynomial_degree = 10;  // Degree of polynomial (e.g., cubic polynomial)
-    //auto data = generate_polynomial_data(n,polynomial_degree);
-    auto data = parser(std::cin);
+    auto data = generate_polynomial_data(n,polynomial_degree);
+    //auto data = parser(std::cin);
     // cout<<"Reached here\n";
     matrix X = data.first;
     matrix Y = data.second;
 
     // Split the data into training and testing sets
+    auto start = chrono::high_resolution_clock::now();
     float split_ratio = 0.8;
     auto split_data = test_train_split(X, Y, split_ratio);
     matrix X_train = split_data.first.first;
@@ -98,6 +100,8 @@ int main() {
     cout<<"===========================================\n";
     // Test the model
     r.test(X_test, Y_test);
-
+    auto end = chrono::high_resolution_clock::now();
+    auto elapsed = chrono::duration_cast<chrono::duration<double>>(end- start);
+    cout<<elapsed.count();
     return 0;
 }

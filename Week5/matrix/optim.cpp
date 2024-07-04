@@ -899,6 +899,7 @@ matrix matmul(const matrix& first, const matrix& second){
         for(int k=0;k<MAX_THREADS;k++){
             T[k].join();
         }
+        delete[] T;
         return net;
     }
 }
@@ -934,6 +935,7 @@ matrix eye(unsigned long size){
     for(int k=0;k<MAX_THREADS;k++){
         T[k].join();
     }
+    delete[] T;
     return diag;
 }
 
@@ -950,6 +952,7 @@ matrix eye(unsigned long rows, unsigned long cols){
     for(int k=0;k<MAX_THREADS;k++){
         T[k].join();
     }
+    delete[] T;
     return diag;
 }
 
@@ -1217,6 +1220,7 @@ matrix min(matrix &arr,int axis) {
         for(int k=0;k<MAX_THREADS;k++){
             T[k].join();
         }
+        delete[] T;
     } else {  //largest for each row
         thread *T = new thread[MAX_THREADS];
         unsigned long total_rows= result.rows;
@@ -1229,6 +1233,7 @@ matrix min(matrix &arr,int axis) {
         for(int k=0;k<MAX_THREADS;k++){
             T[k].join();
         }
+        delete[] T;
     }
     return result;
 }
@@ -1291,6 +1296,7 @@ matrix argmin(matrix &arr,int axis) {
         for(int k=0;k<MAX_THREADS;k++){
             T[k].join();
         }
+        delete[] T;
     } else {  // Argmax along rows (resulting in column vector)
        thread *T = new thread[MAX_THREADS];
         unsigned long total_rows= result.rows;
@@ -1303,6 +1309,7 @@ matrix argmin(matrix &arr,int axis) {
         for(int k=0;k<MAX_THREADS;k++){
             T[k].join();
         }
+        delete[] T;
     }
 
     return result;
@@ -1389,6 +1396,7 @@ matrix ones (unsigned long rows, unsigned long cols) {
     for(int k=0;k<MAX_THREADS;k++){
         T[k].join();
     }
+    delete[] T;
     return t;
 }
 
@@ -1466,6 +1474,7 @@ matrix fabs(matrix &a) {
     for(int k=0;k<MAX_THREADS;k++){
         T[k].join();
     }
+    delete[] T;
     return res;
 }
 
@@ -1482,6 +1491,7 @@ matrix exp(matrix &a) {
     for(int k=0;k<MAX_THREADS;k++){
         T[k].join();
     }
+    delete[] T;
     return res;
 }
 
@@ -1498,7 +1508,7 @@ matrix tanh(matrix &a) {
     for(int k=0;k<MAX_THREADS;k++){
         T[k].join();
     }
-
+    delete[] T;
     return res;
 }
 
@@ -1515,6 +1525,7 @@ matrix log(matrix &a, double logbase) {
     for(int k=0;k<MAX_THREADS;k++){
         T[k].join();
     }
+    delete[] T;
     return res;
 }
 
@@ -1531,7 +1542,7 @@ matrix sqrt(matrix &a) {
     for(int k=0;k<MAX_THREADS;k++){
         T[k].join();
     }
-
+    delete[] T;
     return res;    
 }
 
@@ -1548,7 +1559,7 @@ matrix log(matrix &a) {
     for(int k=0;k<MAX_THREADS;k++){
         T[k].join();
     }
-
+    delete[] T;
     return res;
 }
 

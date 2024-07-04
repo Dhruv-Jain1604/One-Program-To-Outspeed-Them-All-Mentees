@@ -1,6 +1,7 @@
 #include "linear.h"
 #include <fstream>
 #include <sstream>
+#include <chrono>
 using namespace std;
 
 std::vector<double> split(const std::string &s, char delimiter) {
@@ -67,20 +68,21 @@ int main() {
     // Seed for random number generation
     srand(time(0));
     // Generate sample data
-    /*
+    
     uint64_t n = 1000; // Number of data points
     uint64_t d = 10;   // Dimensions of each data point
     auto data = generate_linear_data(n, d);
     matrix X = data.first;
     matrix Y = data.second;
-    */
     
+    /*
     auto data = parser(std::cin);
     matrix X = data.first;
     matrix Y = data.second;
-    
+    */
 
     // Split the data into training and testing sets
+    auto start = chrono::high_resolution_clock::now();
     float split_ratio = 0.8;
     auto split_data = test_train_split(X, Y, split_ratio);
     matrix X_train = split_data.first.first;
@@ -98,6 +100,9 @@ int main() {
     cout<<"===========================================\n";
     // Test the model
     lr.test(X_test, Y_test);
+    auto end = chrono::high_resolution_clock::now();
+    auto elapsed = chrono::duration_cast<chrono::duration<double>>(end- start);
+    cout<<elapsed.count();
     return 0;
 }
 
