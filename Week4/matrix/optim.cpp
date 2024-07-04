@@ -803,11 +803,12 @@ void mlt_simd_matmul(unsigned long start, unsigned long end){
     unsigned long y_coord = result->cols;
     unsigned long max_counter = m1->cols;
     for(unsigned long element=start;element<end;element++){
-        unsigned long cx= element/x_coord;
-        unsigned long cy = element/y_coord;
+        unsigned long cx= element/y_coord;
+        unsigned long cy = element%y_coord;
         double sum=0;
         __m256d r1_m1, r2_m2, mul_r1r2;
         double temp[4], summation[4];
+        //dot product of a row and column
         for(unsigned long counter=0; counter<max_counter-(max_counter%4);counter+=4){
             r1_m1 = _mm256_loadu_pd(&m1->data[(cx*(m1->cols) + counter)]);
             for(int i=0;i<4;i++){
@@ -823,7 +824,6 @@ void mlt_simd_matmul(unsigned long start, unsigned long end){
             sum+=(m1->data[cx*(m1->cols) + count])*(m2->data[count*(m2->cols) + cy]);
         }
         result->data[cx*(result->cols) + cy] = sum;
-        
     }
     return;
 

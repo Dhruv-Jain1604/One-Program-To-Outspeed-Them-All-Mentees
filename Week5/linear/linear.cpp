@@ -10,7 +10,6 @@ LinearRegression::LinearRegression(uint64_t D){
 }
 
 double LinearRegression::l2loss(matrix X, matrix Y){
-   // cout<<"l2Loss"<<endl;
     matrix Y_pred = matmul(X,weights) + bias;
     __size d1 = Y.shape(), d2 = Y_pred.shape();
     if (d1 != d2){
@@ -18,10 +17,19 @@ double LinearRegression::l2loss(matrix X, matrix Y){
         +to_string(d1.second)+" ) and ( "+to_string(d2.first)+" , "+to_string(d2.second)+" ) do not match");
     }
     // Compute the mean squared loss as defined in README.md
+    //cout<<"Begin of iteration"<<endl;
+    //Y_pred.printMatrix();
+    //cout<<"=============="<<endl;
+    //Y.printMatrix();
+    //cout<<" ==================="<<endl;
     double loss = 0;
     matrix temp_loss(Y.rows,Y.cols);
     temp_loss = Y_pred-Y;
+    //temp_loss.printMatrix();
+    //cout<<"=============="<<endl;
     loss = norm(temp_loss);
+    //cout<<loss<<endl;
+    //cout<<"----------"<<endl;
     loss = loss*loss;
     loss/=(Y.rows);
     return loss;
@@ -86,6 +94,7 @@ void LinearRegression::GD(matrix X, matrix Y,double learning_rate, uint64_t limi
         bias = bias - eta*temp.second;
         old_loss=loss;
         loss =  l2loss(X,Y);
+        //cout<<old_loss<<" "<<loss<<endl;
         if (iteration %100 == 0) train_loss.PB(loss);
         iteration++;
     }
@@ -99,9 +108,17 @@ void LinearRegression::train(matrix X,matrix Y,double learning_rate, uint64_t li
      * However you do need to get a good enough accuracy and that is obtained by varying the learning rate and 
      * maximum number of iterations .
     */
+   //cout<<"Printing X"<<endl;
+   //X.printMatrix();
     matrix Xt = X.transpose();
+    //cout<<"Printing Xt"<<endl;
+    //Xt.printMatrix();
     matrix Z = matmul(Xt,X);
+    //cout<<"Printing Z"<<endl;
+    //Z.printMatrix();
     GD(X,Y,learning_rate,limit);
+    //cout<<"Checking inverse"<<endl;
+    //(Z.inverse()).printMatrix();
     weights_ = matmul((Z.inverse()),matmul(Xt,Y));
     cout << "Training Loss\n";
     for (uint64_t i = 0; i < train_loss.size() ; i++){
