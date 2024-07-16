@@ -1,4 +1,5 @@
 #include "SATsolver.h"
+#include<memory>
 
 int counterVar = 1;
 // I have kept cdcl codes here, but you should delete these and instead compile with your custom cdcl (if u want to :P)
@@ -368,8 +369,124 @@ t <-> (t1 -> t2) = (-t or (t1->t2)),(t or -(t1->t2)) = (-t or -t1 or t2),(t or -
 t <-> (t1 <-> t2) = (-t or -t1 or t2),(-t or t1 or -t2),(t or t1 or t2),(t or -t1 or -t2)
 
 */
-Variable t; // delete this lol
-return t; // delete this lol
+//cout<<F->toString()<<endl;
+//cout<<"Printing mapping : \n";
+    //for (auto m : variables) {
+        //cout<<m.first.toString()<<" : "<<m.second<<"\n";
+    //}
+    
+if(F->type==VARIABLE){
+    Variable t;
+    t = F->var;
+    if(variables.find(t)==variables.end()){
+    variables.emplace(t,counterVar);
+    counterVar++;
+    }
+    return t;
+}
+else if(F->type==AND){
+    Variable t1=convertFormula(F->left);
+    Variable t2 = convertFormula(F->right);
+    Variable t;
+    t.name='(' + t1.name + "^" + t2.name + ")";
+    variables.emplace(t,counterVar);
+    counterVar++;
+    vector<int> clause1, clause2,clause3;
+    clause1.push_back(-1*variables[t]);
+    clause1.push_back(variables[t1]);
+    clause2.push_back(-1*variables[t]);
+    clause2.push_back(variables[t2]);
+    clause3.push_back(variables[t]);
+    clause3.push_back(-1*variables[t1]);
+    clause3.push_back(-1*variables[t2]);
+    clauses.push_back(clause1);
+    clauses.push_back(clause2);
+    clauses.push_back(clause3);
+    return t;
+}
+else if(F->type==OR){
+    Variable t1=convertFormula(F->left);
+    Variable t2 = convertFormula(F->right);
+    Variable t;
+    t.name='(' + t1.name + "v" + t2.name + ")";
+    variables.emplace(t,counterVar);
+    counterVar++;
+    vector<int> clause1, clause2,clause3;
+    clause1.push_back(variables[t]);
+    clause1.push_back(-1*variables[t1]);
+    clause2.push_back(variables[t]);
+    clause2.push_back(-1*variables[t2]);
+    clause3.push_back(-1*variables[t]);
+    clause3.push_back(variables[t1]);
+    clause3.push_back(variables[t2]);
+    clauses.push_back(clause1);
+    clauses.push_back(clause2);
+    clauses.push_back(clause3);
+    return t;
+}
+else if(F->type==NOT){
+    Variable t1 = convertFormula(F->left);
+    Variable t;
+    t.name="¬(" + t1.name+")";
+    variables.emplace(t,counterVar);
+    counterVar++;
+    vector<int> clause1, clause2;
+    clause1.push_back(variables[t]);
+    clause1.push_back(variables[t1]);
+    clause2.push_back(-1*variables[t]);
+    clause2.push_back(-1*variables[t1]);
+    clauses.push_back(clause1);
+    clauses.push_back(clause2);
+    return t;
+}
+else if(F->type==IF){
+    Variable t1=convertFormula(F->left);
+    Variable t2 = convertFormula(F->right);
+    Variable t;
+    t.name='(' + t1.name + "->" + t2.name + ")";
+    variables.emplace(t,counterVar);
+    counterVar++;
+    vector<int> clause1, clause2,clause3;
+    clause1.push_back(variables[t]);
+    clause1.push_back(variables[t1]);
+    clause2.push_back(variables[t]);
+    clause2.push_back(-1*variables[t2]);
+    clause3.push_back(-1*variables[t]);
+    clause3.push_back(-1*variables[t1]);
+    clause3.push_back(variables[t2]);
+    clauses.push_back(clause1);
+    clauses.push_back(clause2);
+    clauses.push_back(clause3);
+    return t;
+}
+else if(F->type==IFF){
+    Variable t1=convertFormula(F->left);
+    Variable t2 = convertFormula(F->right);
+    Variable t;
+    t.name='(' + t1.name + "<->" + t2.name + ")";
+    variables.emplace(t,counterVar);
+    counterVar++;
+    vector<int> clause1, clause2,clause3, clause4;
+    clause1.push_back(variables[t]);
+    clause1.push_back(variables[t1]);
+    clause1.push_back(variables[t2]);
+    clause2.push_back(variables[t]);
+    clause2.push_back(-1*variables[t2]);
+    clause2.push_back(-1*variables[t1]);
+    clause3.push_back(-1*variables[t]);
+    clause3.push_back(-1*variables[t1]);
+    clause3.push_back(variables[t2]);
+    clause4.push_back(-1*variables[t]);
+    clause4.push_back(variables[t1]);
+    clause4.push_back(-1*variables[t2]);
+    clauses.push_back(clause1);
+    clauses.push_back(clause2);
+    clauses.push_back(clause3);
+    clauses.push_back(clause4);
+    return t;
+}
+//Variable t; // delete this lol
+//return t; // delete this lol
 }
 
 void cdcl::setup(vector<vector<int>> cl, int numLits) {

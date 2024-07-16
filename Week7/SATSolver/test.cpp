@@ -16,7 +16,7 @@ int main () {
     auto iffTest = Formula::Iff(f1,f2);
     auto notTest = Formula::Not(f1);
     auto combineTest = Formula::And(Formula::Not(iffTest),Formula::Or(andTest,orTest));
-    cout<<"Testing "<<andTest->toString()<<", should be SAT\n";
+    /*cout<<"Testing "<<andTest->toString()<<", should be SAT\n";
     s.add(andTest);
     s.solve();    
     cout<<s.result<<"\n";
@@ -51,5 +51,12 @@ int main () {
     s.solve();    
     cout<<s.result<<"\n";
     s.printModel();
-    s.reset();    
+    s.reset();  */
+    auto custom_test = Formula::Not(Formula::Or(Formula::Or(andTest,iffTest),Formula::Not(orTest)));
+    cout<<"Testing "<<custom_test->toString()<<", should be SAT\n";
+    s.add(custom_test);
+    s.solve();    
+    cout<<s.result<<"\n";
+    s.printModel();
+    s.reset();
 }

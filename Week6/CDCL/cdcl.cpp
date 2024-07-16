@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#define MAX_THREADS 8
 using namespace std;
 
 enum RetVal {
@@ -33,6 +34,7 @@ class cdcl {
         int pickBranchingVar();
         bool allVarsAssigned();
         void showResult(int);
+        void mlt_unitProp(int , int , bool& , bool& , int );
     public:
         void initialise();
         int getResult();
@@ -151,25 +153,20 @@ int cdcl::getResult() {
 
 }
 
-int cdcl::unitPropogate(int decisionLevel) {
-    
-    bool unitClauseFound = false;
-    int falseCount = 0;
-    int unsetCount = 0;
-    int literalIndex;
-    bool satisfiedFlag = false;
+
+
+void cdcl::mlt_unitProp(int start, int end, bool unitClauseFound, bool allFalse, int decisionLevel){
+    int falseCount=0;
+    int unsetCount=0;
+    bool satisfiedFlag=false;
     int lastUnsetLiteral = -1;
-
-    do {
-
-        unitClauseFound = false;
-        for (int i=0; i<clauses.size() && !unitClauseFound; i++) {
-
-            falseCount = 0;
-            unsetCount = 0;
-            satisfiedFlag = false;
-
-            for (int j=0; j<clauses[i].size(); j++) {
+    int literalIndex;
+    for(int i=start;i<end;i++){
+        falseCount=0;
+        unsetCount=0;
+        satisfiedFlag=false;
+        lastUnsetLiteral = -1;
+        for (int j=0; j<clauses[i].size(); j++) {
 
                 literalIndex = literalToVar(clauses[i][j]);
                 if (literals[literalIndex] == -1) {
@@ -186,22 +183,112 @@ int cdcl::unitPropogate(int decisionLevel) {
                     break;
                 }
 
-            }
-            
-            if (satisfiedFlag) {
+        }
+        if (satisfiedFlag) {
                 continue;
-            }
-            if (unsetCount == 1) {
+        }
+        if (unsetCount == 1) {
                 assignLiteral(clauses[i][lastUnsetLiteral],decisionLevel,i);
                 unitClauseFound = true;
-                break;
+                return;
             }
-            else if (falseCount == clauses[i].size()) {
+         else if (falseCount == clauses[i].size()) {
                 kappaAntecedent = i;
-                return RetVal::r_unsatisfied;
+                allFalse=true;
+                return;
             }
 
+    }
+}
+
+
+
+int cdcl::unitPropogate(int decisionLevel) {
+
+bool unitClauseFound = false;
+int falseCount = 0;
+int unsetCount = 0;
+int literalIndex;
+bool satisfiedFlag = false;
+int lastUnsetLiteral = -1;
+    do {
+
+        unitClauseFound = false;
+        bool allFalse=false;
+        thread* T = new thread[MAX_THREADS];
+        int *check = new int[MAX_THREADS];
+        for(int p=0;p<MAX_THREADS;p++){
+            check[p]=0;
         }
+        int no_elements = clauses.size();
+         for(int j=0;j<MAX_THREADS-1;j++){
+            int start=j*(no_elements/MAX_THREADS);
+            int end=(j+1)*(no_elements/MAX_THREADS);
+            T[j]= thread(&cdcl::mlt_unitProp,start,end,ref(unitClauseFound),ref(allFalse),decisionLevel);
+            if(unitClauseFound){
+                check[j]=2;
+                break;
+            }
+            else if(allFalse){
+                check[j]=2;
+                return RetVal::r_unsatisfied;
+            }
+            check[j]=1;
+        }
+        if(check[MAX_THREADS-2]==1){
+        T[MAX_THREADS-1]= thread(&cdcl::mlt_unitProp,(MAX_THREADS-1)*(no_elements/MAX_THREADS),no_elements,unitClauseFound,allFalse,decisionLevel);
+        if(allFalse){
+            check[MAX_THREADS-1]=2;
+            return RetVal::r_unsatisfied;
+        }
+        check[MAX_THREADS-1]=1;
+        }
+        for(int k=0;k<MAX_THREADS;k++){
+            if(check[k]){
+            T[k].join();
+            }
+        }
+        delete[] T;
+
+        // for (int i=0; i<clauses.size() && !unitClauseFound; i++) {
+
+        //     falseCount = 0;
+        //     unsetCount = 0;
+        //     satisfiedFlag = false;
+
+        //     for (int j=0; j<clauses[i].size(); j++) {
+
+        //         literalIndex = literalToVar(clauses[i][j]);
+        //         if (literals[literalIndex] == -1) {
+
+        //             unsetCount++;
+        //             lastUnsetLiteral = j;
+
+        //         } 
+        //         else if ((literals[literalIndex] == 0 && clauses[i][j] > 0) || (literals[literalIndex] == 1 && clauses[i][j] < 0)) {
+        //             falseCount++;
+        //         }
+        //         else {
+        //             satisfiedFlag = true;
+        //             break;
+        //         }
+
+        //     }
+            
+        //     if (satisfiedFlag) {
+        //         continue;
+        //     }
+        //     if (unsetCount == 1) {
+        //         assignLiteral(clauses[i][lastUnsetLiteral],decisionLevel,i);
+        //         unitClauseFound = true;
+        //         break;
+        //     }
+        //     else if (falseCount == clauses[i].size()) {
+        //         kappaAntecedent = i;
+        //         return RetVal::r_unsatisfied;
+        //     }
+
+        // }
 
     }
     while (unitClauseFound);
@@ -236,14 +323,30 @@ void cdcl::assignLiteral(int variable, int decisionLevel, int antecedent) {
 
 }
 
+void mlt_pickBranchingVar(int start, int end, int& mostFreq, const vector<int>& literalFreq){
+    if(start==end) return;
+    for(int i=start;i<end;i++){
+        if(literalFreq[i]>literalFreq[mostFreq]){
+            mostFreq=i;
+        }
+    }
+}
+
 int cdcl::pickBranchingVar() {
     
     int mostFreq = 0;
-    for (int i=1; i<literalFreq.size(); i++) {
-        if (literalFreq[i] > literalFreq[mostFreq]) {
-            mostFreq = i;
-        }
+    thread *T = new thread[MAX_THREADS];
+    int no_elements=literalFreq.size();
+    for(int j=0;j<MAX_THREADS-1;j++){
+            int start=j*(no_elements/MAX_THREADS);
+            int end=(j+1)*(no_elements/MAX_THREADS);
+            T[j]= thread(mlt_pickBranchingVar,start,end,ref(mostFreq),literalFreq);
     }
+    T[MAX_THREADS-1]= thread(mlt_pickBranchingVar,(MAX_THREADS-1)*(no_elements/MAX_THREADS),no_elements,ref(mostFreq),literalFreq);
+    for(int k=0;k<MAX_THREADS;k++){
+            T[k].join();
+    }
+    delete[] T;
     if (polarity[mostFreq] >= 0) {
         return mostFreq+1;
     }
